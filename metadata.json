@@ -1,0 +1,6 @@
+{
+  "name": "Axiolix",
+  "description": "Futuristic AI chat bot with cybernetic UI, secure account access, and conversation history dashboard.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
