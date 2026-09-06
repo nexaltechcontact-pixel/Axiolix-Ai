@@ -4,8 +4,6 @@ import android.app.Application
 import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import android.net.Uri
-import androidx.compose.ui.platform.LocalContext
 import com.example.data.local.AppDatabase
 import com.example.data.local.entity.ChatMessageEntity
 import com.example.data.local.entity.ConversationEntity
