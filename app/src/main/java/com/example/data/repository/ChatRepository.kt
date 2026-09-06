@@ -1,6 +1,8 @@
 package com.example.data.repository
 
 import com.example.data.api.GeminiApiClient
+import android.content.Context
+import android.net.Uri
 import com.example.data.local.dao.ChatDao
 import com.example.data.local.entity.ChatMessageEntity
 import com.example.data.local.entity.ConversationEntity
@@ -91,9 +93,55 @@ class ChatRepository(
     if (conv != null) {
       chatDao.updateConversation(conv.copy(updatedAt = System.currentTimeMillis()))
     }
+suspend fun analyzeImage(
+    conversationId: Long,
+    context: Context,
+    imageUri: Uri
+): Result<ChatMessageEntity> {
+
+    val now = System.currentTimeMillis()
+
+    val userMsg = ChatMessageEntity(
+        conversationId = conversationId,
+        sender = "USER",
+        content = "🖼️ Image selected for analysis",
+        timestamp = now
+    )
+
+    chatDao.insertMessage(userMsg)
+
+    val result = geminiApiClient.analyzeImage(
+        context = context,
+        imageUri = imageUri,
+        prompt = "Analyze this image carefully. Describe the important objects, visible text, scene, colors, and useful details. If text is visible, read it accurately. Be concise but informative."
+    )
+
+    val analysis = result.getOrElse {
+        return Result.failure(it)
+    }
+
+    val botMsg = ChatMessageEntity(
+        conversationId = conversationId,
+        sender = "AXIOLIX",
+        content = analysis,
+        timestamp = System.currentTimeMillis()
+    )
+
+    val botMsgId = chatDao.insertMessage(botMsg)
+
+    val conv = chatDao.getConversationById(conversationId)
+
+    if (conv != null) {
+        chatDao.updateConversation(
+            conv.copy(updatedAt = System.currentTimeMillis())
+        )
+    }
 
     return Result.success(botMsg.copy(id = botMsgId))
+}
+    return Result.success(botMsg.copy(id = botMsgId))
   }
+  
 
   suspend fun getLastMessage(conversationId: Long): ChatMessageEntity? {
     return chatDao.getLastMessage(conversationId)
