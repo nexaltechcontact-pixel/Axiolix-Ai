@@ -1,8 +1,11 @@
 package com.example.ui.viewmodel
 
 import android.app.Application
+import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import android.net.Uri
+import androidx.compose.ui.platform.LocalContext
 import com.example.data.local.AppDatabase
 import com.example.data.local.entity.ChatMessageEntity
 import com.example.data.local.entity.ConversationEntity
@@ -136,8 +139,40 @@ class AxiolixViewModel(application: Application) : AndroidViewModel(application)
         _uiState.value = _uiState.value.copy(isGenerating = false)
       }
     }
-  }
+  } 
+  
+fun analyzeImage(imageUri: Uri) {
+    val convId = _uiState.value.currentConversationId ?: return
 
+    viewModelScope.launch {
+        _uiState.value = _uiState.value.copy(
+            isGenerating = true,
+            errorMessage = null
+        )
+
+        try {
+            val result = chatRepository.analyzeImage(
+                conversationId = convId,
+                context = getApplication<Application>(),
+                imageUri = imageUri
+            )
+
+            result.onFailure { error ->
+                _uiState.value = _uiState.value.copy(
+                    errorMessage = "Image analysis failed: ${error.localizedMessage}"
+                )
+            }
+        } catch (e: Exception) {
+            _uiState.value = _uiState.value.copy(
+                errorMessage = "Image analysis failed: ${e.localizedMessage}"
+            )
+        } finally {
+            _uiState.value = _uiState.value.copy(
+                isGenerating = false
+            )
+        }
+    }
+}
   fun renameConversation(id: Long, newTitle: String) {
     viewModelScope.launch {
       val clean = newTitle.trim()
