@@ -82,7 +82,7 @@ fun ChatScreen(
   currentUser: UserAccountEntity?,
   conversationTitle: String,
   onSendMessage: (String) -> Unit,
-  onPickImage: () -> Unit,
+  onImageSelected: (Uri) -> Unit,
   onOpenDashboard: () -> Unit,
   onOpenAuthDialog: () -> Unit,
   onCreateNewSession: () -> Unit,
