@@ -45,6 +45,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
@@ -58,6 +61,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.R
+import androidx.compose.material.icons.filled.AddPhotoAlternate
 import com.example.data.local.entity.ChatMessageEntity
 import com.example.data.local.entity.UserAccountEntity
 import com.example.ui.theme.CyberBlack
@@ -78,6 +82,7 @@ fun ChatScreen(
   currentUser: UserAccountEntity?,
   conversationTitle: String,
   onSendMessage: (String) -> Unit,
+  onPickImage: () -> Unit,
   onOpenDashboard: () -> Unit,
   onOpenAuthDialog: () -> Unit,
   onCreateNewSession: () -> Unit,
