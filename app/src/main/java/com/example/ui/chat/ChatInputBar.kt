@@ -49,6 +49,7 @@ import com.example.ui.theme.TextSecondary
 fun ChatInputBar(
   isGenerating: Boolean,
   onSendMessage: (String) -> Unit,
+  onPickImage: () -> Unit,
   modifier: Modifier = Modifier
 ) {
   var text by remember { mutableStateOf("") }
