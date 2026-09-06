@@ -3,6 +3,9 @@ package com.example.data.api
 import android.util.Log
 import com.example.BuildConfig
 import kotlinx.coroutines.Dispatchers
+import android.content.Context
+import android.net.Uri
+import android.util.Base64
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -121,7 +124,57 @@ class GeminiApiClient {
       Result.success(generateCyberFallback(userPrompt))
     }
   }
+suspend fun analyzeImage(
+    context: Context,
+    imageUri: Uri,
+    prompt: String = "Analyze this image carefully and describe what you see."
+): Result<String> = withContext(Dispatchers.IO) {
+    val apiKey = BuildConfig.GEMINI_API_KEY.trim()
 
+    if (apiKey.isEmpty() || apiKey == "MY_GEMINI_API_KEY") {
+        return@withContext Result.success(
+            "Image analysis is unavailable because the Gemini API key is not configured."
+        )
+    }
+
+    try {
+        val inputStream = context.contentResolver.openInputStream(imageUri)
+            ?: return@withContext Result.failure(
+                Exception("Unable to read selected image.")
+            )
+
+        val imageBytes = inputStream.use { it.readBytes() }
+        val base64Image = Base64.encodeToString(imageBytes, Base64.NO_WRAP)
+
+        val mimeType = context.contentResolver.getType(imageUri)
+            ?: "image/jpeg"
+
+        val jsonBody = JSONObject()
+
+        val contentsArray = JSONArray()
+        val contentObject = JSONObject()
+        contentObject.put("role", "user")
+
+        val partsArray = JSONArray()
+
+        partsArray.put(
+            JSONObject().put(
+                "text",
+                prompt
+            )
+        )
+
+        partsArray.put(
+            JSONObject()
+                .put(
+                    "inline_data",
+                    JSONObject()
+                        .put("mime_type", mimeType)
+                        .put("data", base64Image)
+                )
+        )
+
+   
   private fun generateCyberFallback(prompt: String): String {
     val lower = prompt.lowercase()
     return when {
