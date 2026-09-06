@@ -95,6 +95,20 @@ fun AxiolixApp(viewModel: AxiolixViewModel) {
               currentUser = uiState.currentUser,
               conversationTitle = activeConversationTitle,
               onSendMessage = { viewModel.sendMessage(it) },
+              ChatScreen(
+              messages = currentMessages,
+              isGenerating = uiState.isGenerating,
+              currentUser = uiState.currentUser,
+              conversationTitle = activeConversationTitle,
+              onSendMessage = { viewModel.sendMessage(it) },
+              onOpenDashboard = { viewModel.openDashboard() },
+              onOpenAuthDialog = { viewModel.showAuthDialog() },
+              onCreateNewSession = { viewModel.createNewSession() }
+            )
+          }
+        }
+      }
+    }
               onOpenDashboard = { viewModel.openDashboard() },
               onOpenAuthDialog = { viewModel.showAuthDialog() },
               onCreateNewSession = { viewModel.createNewSession() }
