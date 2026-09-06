@@ -89,6 +89,13 @@ fun ChatScreen(
   modifier: Modifier = Modifier
 ) {
   val listState = rememberLazyListState()
+  val imagePickerLauncher = rememberLauncherForActivityResult(
+    contract = ActivityResultContracts.GetContent()
+) { uri: Uri? ->
+    uri?.let {
+        onImageSelected(it)
+    }
+}
 
   // Auto-scroll to bottom on new messages or during generation
   LaunchedEffect(messages.size, isGenerating) {
@@ -372,8 +379,9 @@ fun ChatScreen(
 
     // Bottom Input Bar
     ChatInputBar(
-      isGenerating = isGenerating,
-      onSendMessage = onSendMessage
-    )
-  }
-}
+    isGenerating = isGenerating,
+    onSendMessage = onSendMessage,
+    onPickImage = {
+        imagePickerLauncher.launch("image/*")
+    }
+)
