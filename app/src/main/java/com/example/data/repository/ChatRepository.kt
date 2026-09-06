@@ -1,8 +1,8 @@
 package com.example.data.repository
 
-import com.example.data.api.GeminiApiClient
 import android.content.Context
 import android.net.Uri
+import com.example.data.api.GeminiApiClient
 import com.example.data.local.dao.ChatDao
 import com.example.data.local.entity.ChatMessageEntity
 import com.example.data.local.entity.ConversationEntity
@@ -12,36 +12,61 @@ class ChatRepository(
   private val chatDao: ChatDao,
   private val geminiApiClient: GeminiApiClient = GeminiApiClient()
 ) {
-  val allConversations: Flow<List<ConversationEntity>> = chatDao.getAllConversations()
 
-  fun getMessagesForConversation(conversationId: Long): Flow<List<ChatMessageEntity>> {
+  val allConversations: Flow<List<ConversationEntity>> =
+    chatDao.getAllConversations()
+
+  fun getMessagesForConversation(
+    conversationId: Long
+  ): Flow<List<ChatMessageEntity>> {
     return chatDao.getMessagesForConversation(conversationId)
   }
 
-  suspend fun createNewConversation(title: String = "New Session"): Long {
+  suspend fun createNewConversation(
+    title: String = "New Session"
+  ): Long {
     val conversation = ConversationEntity(
       title = title,
       createdAt = System.currentTimeMillis(),
       updatedAt = System.currentTimeMillis()
     )
+
     return chatDao.insertConversation(conversation)
   }
 
-  suspend fun updateConversationTitle(conversationId: Long, newTitle: String) {
+  suspend fun updateConversationTitle(
+    conversationId: Long,
+    newTitle: String
+  ) {
     val existing = chatDao.getConversationById(conversationId)
+
     if (existing != null) {
-      chatDao.updateConversation(existing.copy(title = newTitle, updatedAt = System.currentTimeMillis()))
+      chatDao.updateConversation(
+        existing.copy(
+          title = newTitle,
+          updatedAt = System.currentTimeMillis()
+        )
+      )
     }
   }
 
-  suspend fun togglePinConversation(conversationId: Long) {
+  suspend fun togglePinConversation(
+    conversationId: Long
+  ) {
     val existing = chatDao.getConversationById(conversationId)
+
     if (existing != null) {
-      chatDao.updateConversation(existing.copy(isPinned = !existing.isPinned))
+      chatDao.updateConversation(
+        existing.copy(
+          isPinned = !existing.isPinned
+        )
+      )
     }
   }
 
-  suspend fun deleteConversation(conversationId: Long) {
+  suspend fun deleteConversation(
+    conversationId: Long
+  ) {
     chatDao.deleteConversationById(conversationId)
   }
 
@@ -49,8 +74,13 @@ class ChatRepository(
     chatDao.deleteAllConversations()
   }
 
-  suspend fun sendMessage(conversationId: Long, text: String): Result<ChatMessageEntity> {
+  suspend fun sendMessage(
+    conversationId: Long,
+    text: String
+  ): Result<ChatMessageEntity> {
+
     val now = System.currentTimeMillis()
+
     // 1. Insert user message
     val userMsg = ChatMessageEntity(
       conversationId = conversationId,
@@ -58,96 +88,133 @@ class ChatRepository(
       content = text,
       timestamp = now
     )
+
     chatDao.insertMessage(userMsg)
 
-    // Update conversation title if default
+    // 2. Update conversation title if default
     val conv = chatDao.getConversationById(conversationId)
+
     if (conv != null) {
-      val isDefault = conv.title == "New Session" || conv.title.startsWith("Session #")
+      val isDefault =
+        conv.title == "New Session" ||
+        conv.title.startsWith("Session #")
+
       val updatedTitle = if (isDefault) {
-        text.take(32).trim().let { if (text.length > 32) "$it..." else it }
+        text.take(32).trim().let {
+          if (text.length > 32) "$it..." else it
+        }
       } else {
         conv.title
       }
-      chatDao.updateConversation(conv.copy(title = updatedTitle, updatedAt = now))
+
+      chatDao.updateConversation(
+        conv.copy(
+          title = updatedTitle,
+          updatedAt = now
+        )
+      )
     }
 
-    // 2. Fetch recent conversation history for context
+    // 3. Fetch conversation history
     val historyEntities = mutableListOf<Pair<String, String>>()
-    // Get last few messages
-    // Note: For context we use simple pairs
-    val replyResult = geminiApiClient.generateChatReply(historyEntities, text)
 
-    val botReplyText = replyResult.getOrElse { "Neural synchronization error. Subsystems recalibrating..." }
+    val replyResult = geminiApiClient.generateChatReply(
+      historyEntities,
+      text
+    )
 
-    // 3. Insert Axiolix response
+    val botReplyText = replyResult.getOrElse {
+      "Neural synchronization error. Subsystems recalibrating..."
+    }
+
+    // 4. Insert Axiolix response
     val botMsg = ChatMessageEntity(
       conversationId = conversationId,
       sender = "AXIOLIX",
       content = botReplyText,
       timestamp = System.currentTimeMillis()
     )
+
     val botMsgId = chatDao.insertMessage(botMsg)
 
-    // Update conversation timestamp again
+    // 5. Update conversation timestamp
     if (conv != null) {
-      chatDao.updateConversation(conv.copy(updatedAt = System.currentTimeMillis()))
+      chatDao.updateConversation(
+        conv.copy(
+          updatedAt = System.currentTimeMillis()
+        )
+      )
     }
-suspend fun analyzeImage(
+
+    return Result.success(
+      botMsg.copy(id = botMsgId)
+    )
+  }
+
+  suspend fun analyzeImage(
     conversationId: Long,
     context: Context,
     imageUri: Uri
-): Result<ChatMessageEntity> {
+  ): Result<ChatMessageEntity> {
 
     val now = System.currentTimeMillis()
 
+    // 1. Insert image selection message
     val userMsg = ChatMessageEntity(
-        conversationId = conversationId,
-        sender = "USER",
-        content = "🖼️ Image selected for analysis",
-        timestamp = now
+      conversationId = conversationId,
+      sender = "USER",
+      content = "🖼️ Image selected for analysis",
+      timestamp = now
     )
 
     chatDao.insertMessage(userMsg)
 
+    // 2. Send image to Gemini
     val result = geminiApiClient.analyzeImage(
-        context = context,
-        imageUri = imageUri,
-        prompt = "Analyze this image carefully. Describe the important objects, visible text, scene, colors, and useful details. If text is visible, read it accurately. Be concise but informative."
+      context = context,
+      imageUri = imageUri,
+      prompt = "Analyze this image carefully. Describe the important objects, visible text, scene, colors, and useful details. If text is visible, read it accurately. Be concise but informative."
     )
 
     val analysis = result.getOrElse {
-        return Result.failure(it)
+      return Result.failure(it)
     }
 
+    // 3. Insert Axiolix analysis response
     val botMsg = ChatMessageEntity(
-        conversationId = conversationId,
-        sender = "AXIOLIX",
-        content = analysis,
-        timestamp = System.currentTimeMillis()
+      conversationId = conversationId,
+      sender = "AXIOLIX",
+      content = analysis,
+      timestamp = System.currentTimeMillis()
     )
 
     val botMsgId = chatDao.insertMessage(botMsg)
 
+    // 4. Update conversation timestamp
     val conv = chatDao.getConversationById(conversationId)
 
     if (conv != null) {
-        chatDao.updateConversation(
-            conv.copy(updatedAt = System.currentTimeMillis())
+      chatDao.updateConversation(
+        conv.copy(
+          updatedAt = System.currentTimeMillis()
         )
+      )
     }
 
-    return Result.success(botMsg.copy(id = botMsgId))
-}
-    return Result.success(botMsg.copy(id = botMsgId))
+    return Result.success(
+      botMsg.copy(id = botMsgId)
+    )
   }
-  
 
-  suspend fun getLastMessage(conversationId: Long): ChatMessageEntity? {
+  suspend fun getLastMessage(
+    conversationId: Long
+  ): ChatMessageEntity? {
     return chatDao.getLastMessage(conversationId)
   }
 
-  suspend fun getMessageCount(conversationId: Long): Int {
+  suspend fun getMessageCount(
+    conversationId: Long
+  ): Int {
     return chatDao.getMessageCount(conversationId)
   }
 }
