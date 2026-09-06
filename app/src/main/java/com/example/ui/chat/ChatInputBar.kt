@@ -17,6 +17,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.filled.AddPhotoAlternate
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -71,12 +72,33 @@ fun ChatInputBar(
     verticalAlignment = Alignment.CenterVertically,
     horizontalArrangement = Arrangement.spacedBy(8.dp)
   ) {
+
+    // Image Picker Button
+    IconButton(
+      onClick = onPickImage,
+      enabled = !isGenerating,
+      modifier = Modifier
+        .size(42.dp)
+        .testTag("pick_image_button")
+    ) {
+      Icon(
+        imageVector = Icons.Default.AddPhotoAlternate,
+        contentDescription = "Select Image",
+        tint = if (!isGenerating) NeonCyan else TextSecondary,
+        modifier = Modifier.size(22.dp)
+      )
+    }
+
     OutlinedTextField(
       value = text,
       onValueChange = { text = it },
       placeholder = {
         Text(
-          text = if (isGenerating) "Axiolix is synthesizing response..." else "Transmit prompt to Axiolix...",
+          text = if (isGenerating) {
+            "Axiolix is synthesizing response..."
+          } else {
+            "Transmit prompt to Axiolix..."
+          },
           fontFamily = FontFamily.Monospace,
           fontSize = 12.sp,
           color = TextMuted
@@ -106,11 +128,19 @@ fun ChatInputBar(
         .size(46.dp)
         .clip(CircleShape)
         .background(
-          if (text.isNotBlank() && !isGenerating) NeonCyan else CyberSurface
+          if (text.isNotBlank() && !isGenerating) {
+            NeonCyan
+          } else {
+            CyberSurface
+          }
         )
         .border(
           width = 1.dp,
-          color = if (text.isNotBlank() && !isGenerating) NeonCyan else CyberBorder,
+          color = if (text.isNotBlank() && !isGenerating) {
+            NeonCyan
+          } else {
+            CyberBorder
+          },
           shape = CircleShape
         ),
       contentAlignment = Alignment.Center
