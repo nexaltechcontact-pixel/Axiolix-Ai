@@ -385,3 +385,5 @@ fun ChatScreen(
         imagePickerLauncher.launch("image/*")
     }
 )
+  }
+}
