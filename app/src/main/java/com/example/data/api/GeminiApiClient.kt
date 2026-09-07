@@ -285,7 +285,142 @@ class GeminiApiClient {
       Result.failure(e)
     }
   }
+suspend fun generateImage(
+    prompt: String
+): Result<ByteArray> = withContext(Dispatchers.IO) {
 
+    val apiKey = BuildConfig.GEMINI_API_KEY.trim()
+
+    if (apiKey.isEmpty() || apiKey == "MY_GEMINI_API_KEY") {
+        return@withContext Result.failure(
+            Exception("Gemini API key is not configured.")
+        )
+    }
+
+    try {
+        val jsonBody = JSONObject()
+
+        val contentsArray = JSONArray()
+        val contentObject = JSONObject()
+        val partsArray = JSONArray()
+
+        partsArray.put(
+            JSONObject().put(
+                "text",
+                "Generate a high-quality image based on this prompt: $prompt"
+            )
+        )
+
+        contentObject.put("parts", partsArray)
+        contentsArray.put(contentObject)
+
+        jsonBody.put("contents", contentsArray)
+
+        val generationConfig = JSONObject()
+        val responseModalities = JSONArray()
+        responseModalities.put("IMAGE")
+
+        generationConfig.put(
+            "responseModalities",
+            responseModalities
+        )
+
+        jsonBody.put(
+            "generationConfig",
+            generationConfig
+        )
+
+        val mediaType =
+            "application/json; charset=utf-8".toMediaType()
+
+        val requestBody = jsonBody
+            .toString()
+            .toRequestBody(mediaType)
+
+        val imageUrl =
+            "https://generativelanguage.googleapis.com/v1/models/gemini-3.1-flash-image:generateContent"
+
+        val request = Request.Builder()
+            .url("$imageUrl?key=$apiKey")
+            .post(requestBody)
+            .build()
+
+        val response = client
+            .newCall(request)
+            .execute()
+
+        val responseBody = response.body?.string()
+
+        if (!response.isSuccessful || responseBody.isNullOrEmpty()) {
+            Log.w(
+                TAG,
+                "Image generation failed: ${response.code} $responseBody"
+            )
+
+            return@withContext Result.failure(
+                Exception("Gemini image generation failed: ${response.code}")
+            )
+        }
+
+        val jsonResponse = JSONObject(responseBody)
+
+        val candidates =
+            jsonResponse.optJSONArray("candidates")
+
+        if (candidates != null && candidates.length() > 0) {
+
+            val content =
+                candidates
+                    .getJSONObject(0)
+                    .optJSONObject("content")
+
+            val parts =
+                content?.optJSONArray("parts")
+
+            if (parts != null) {
+
+                for (i in 0 until parts.length()) {
+
+                    val part = parts.getJSONObject(i)
+
+                    val inlineData =
+                        part.optJSONObject("inlineData")
+                            ?: part.optJSONObject("inline_data")
+
+                    if (inlineData != null) {
+
+                        val base64Data =
+                            inlineData.optString("data")
+
+                        if (base64Data.isNotEmpty()) {
+
+                            return@withContext Result.success(
+                                Base64.decode(
+                                    base64Data,
+                                    Base64.DEFAULT
+                                )
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        Result.failure(
+            Exception("No generated image returned by Gemini.")
+        )
+
+    } catch (e: Exception) {
+
+        Log.e(
+            TAG,
+            "Error generating image",
+            e
+        )
+
+        Result.failure(e)
+    }
+}
   private fun generateCyberFallback(prompt: String): String {
 
     val lower = prompt.lowercase()
