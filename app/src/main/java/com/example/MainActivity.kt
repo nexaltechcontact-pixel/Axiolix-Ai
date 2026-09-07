@@ -25,11 +25,13 @@ import com.example.ui.theme.MyApplicationTheme
 import com.example.ui.viewmodel.AxiolixViewModel
 
 class MainActivity : ComponentActivity() {
+
   private val viewModel: AxiolixViewModel by viewModels()
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     enableEdgeToEdge()
+
     setContent {
       MyApplicationTheme {
         AxiolixApp(viewModel = viewModel)
@@ -40,12 +42,14 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun AxiolixApp(viewModel: AxiolixViewModel) {
+
   val uiState by viewModel.uiState.collectAsStateWithLifecycle()
   val conversations by viewModel.conversations.collectAsStateWithLifecycle()
   val currentMessages by viewModel.currentMessages.collectAsStateWithLifecycle()
 
   val activeConversationTitle = conversations
-    .find { it.id == uiState.currentConversationId }?.title
+    .find { it.id == uiState.currentConversationId }
+    ?.title
     ?: "Neural Stream"
 
   Box(
@@ -53,6 +57,7 @@ fun AxiolixApp(viewModel: AxiolixViewModel) {
       .fillMaxSize()
       .background(CyberBlack)
   ) {
+
     AnimatedContent(
       targetState = uiState.introCompleted,
       transitionSpec = {
@@ -60,11 +65,17 @@ fun AxiolixApp(viewModel: AxiolixViewModel) {
       },
       label = "intro_app_transition"
     ) { introDone ->
+
       if (!introDone) {
+
         IntroTransitionScreen(
-          onComplete = { viewModel.completeIntro() }
+          onComplete = {
+            viewModel.completeIntro()
+          }
         )
+
       } else {
+
         AnimatedContent(
           targetState = uiState.showDashboard,
           transitionSpec = {
@@ -72,46 +83,70 @@ fun AxiolixApp(viewModel: AxiolixViewModel) {
           },
           label = "dashboard_chat_transition"
         ) { inDashboard ->
+
           if (inDashboard) {
+
             ConversationDashboardView(
               conversations = conversations,
               currentConversationId = uiState.currentConversationId,
               currentUser = uiState.currentUser,
               searchQuery = uiState.searchQuery,
-              onSearchQueryChange = { viewModel.setSearchQuery(it) },
-              onSelectConversation = { viewModel.selectConversation(it) },
-              onCreateNewSession = { viewModel.createNewSession() },
-              onRenameConversation = { id, title -> viewModel.renameConversation(id, title) },
-              onTogglePin = { viewModel.togglePin(it) },
-              onDeleteConversation = { viewModel.deleteConversation(it) },
-              onClearAll = { viewModel.clearAllHistory() },
-              onOpenAuthDialog = { viewModel.showAuthDialog() },
-              onCloseDashboard = { viewModel.closeDashboard() }
+              onSearchQueryChange = {
+                viewModel.setSearchQuery(it)
+              },
+              onSelectConversation = {
+                viewModel.selectConversation(it)
+              },
+              onCreateNewSession = {
+                viewModel.createNewSession()
+              },
+              onRenameConversation = { id, title ->
+                viewModel.renameConversation(id, title)
+              },
+              onTogglePin = {
+                viewModel.togglePin(it)
+              },
+              onDeleteConversation = {
+                viewModel.deleteConversation(it)
+              },
+              onClearAll = {
+                viewModel.clearAllHistory()
+              },
+              onOpenAuthDialog = {
+                viewModel.showAuthDialog()
+              },
+              onCloseDashboard = {
+                viewModel.closeDashboard()
+              }
             )
+
           } else {
+
             ChatScreen(
               messages = currentMessages,
               isGenerating = uiState.isGenerating,
               currentUser = uiState.currentUser,
               conversationTitle = activeConversationTitle,
-              onSendMessage = { viewModel.sendMessage(it) },
-              ChatScreen(
-              messages = currentMessages,
-              isGenerating = uiState.isGenerating,
-              currentUser = uiState.currentUser,
-              conversationTitle = activeConversationTitle,
-              onSendMessage = { viewModel.sendMessage(it) },
-              onOpenDashboard = { viewModel.openDashboard() },
-              onOpenAuthDialog = { viewModel.showAuthDialog() },
-              onCreateNewSession = { viewModel.createNewSession() }
-            )
-          }
-        }
-      }
-    }
-              onOpenDashboard = { viewModel.openDashboard() },
-              onOpenAuthDialog = { viewModel.showAuthDialog() },
-              onCreateNewSession = { viewModel.createNewSession() }
+
+              onSendMessage = {
+                viewModel.sendMessage(it)
+              },
+
+              onImageSelected = { uri ->
+                viewModel.analyzeImage(uri)
+              },
+
+              onOpenDashboard = {
+                viewModel.openDashboard()
+              },
+
+              onOpenAuthDialog = {
+                viewModel.showAuthDialog()
+              },
+
+              onCreateNewSession = {
+                viewModel.createNewSession()
+              }
             )
           }
         }
@@ -120,12 +155,22 @@ fun AxiolixApp(viewModel: AxiolixViewModel) {
 
     // Register / Login Pop Up Modal
     if (uiState.showAuthDialog) {
+
       AuthDialog(
         currentUser = uiState.currentUser,
         errorMessage = uiState.errorMessage,
-        onDismiss = { viewModel.dismissAuthDialog() },
-        onLogin = { id, key, callback -> viewModel.login(id, key, callback) },
-        onRegister = { user, email, key, callback -> viewModel.register(user, email, key, callback) }
+
+        onDismiss = {
+          viewModel.dismissAuthDialog()
+        },
+
+        onLogin = { id, key, callback ->
+          viewModel.login(id, key, callback)
+        },
+
+        onRegister = { user, email, key, callback ->
+          viewModel.register(user, email, key, callback)
+        }
       )
     }
   }
