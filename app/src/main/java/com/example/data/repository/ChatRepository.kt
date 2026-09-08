@@ -205,7 +205,31 @@ class ChatRepository(
       botMsg.copy(id = botMsgId)
     )
   }
+  suspend fun generateImage(
+    conversationId: Long,
+    prompt: String
+  ): Result<ByteArray> {
 
+    val userMsg = ChatMessageEntity(
+      conversationId = conversationId,
+      sender = "USER",
+      content = "🎨 Image generation: $prompt",
+      timestamp = System.currentTimeMillis()
+    )
+
+    chatDao.insertMessage(userMsg)
+
+    val result = geminiApiClient.generateImage(prompt)
+
+    if (result.isFailure) {
+      return Result.failure(
+        result.exceptionOrNull()
+          ?: Exception("Image generation failed.")
+      )
+    }
+
+    return result
+  }
   suspend fun getLastMessage(
     conversationId: Long
   ): ChatMessageEntity? {
