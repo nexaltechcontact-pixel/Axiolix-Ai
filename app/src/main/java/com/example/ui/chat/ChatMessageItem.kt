@@ -4,6 +4,8 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.widget.Toast
+import androidx.compose.ui.layout.ContentScale
+import java.io.File
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -177,13 +179,43 @@ fun ChatMessageItem(
           )
       ) {
         Column(modifier = Modifier.padding(12.dp)) {
-          Text(
-            text = message.content,
-            fontSize = 14.sp,
-            fontFamily = FontFamily.Default,
-            color = TextPrimary,
-            lineHeight = 21.sp
-          )
+          if (message.content.startsWith("🖼️IMAGE_FILE:")) {
+
+    val imagePath = message.content
+        .removePrefix("🖼️IMAGE_FILE:")
+        .trim()
+
+    val imageFile = remember(imagePath) {
+        File(imagePath)
+    }
+
+    if (imageFile.exists()) {
+        coil.compose.AsyncImage(
+            model = imageFile,
+            contentDescription = "Generated image",
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(12.dp)),
+            contentScale = ContentScale.Fit
+        )
+    } else {
+        Text(
+            text = "Generated image not found.",
+            fontSize = 13.sp,
+            color = TextSecondary
+        )
+    }
+
+} else {
+
+    Text(
+        text = message.content,
+        fontSize = 14.sp,
+        fontFamily = FontFamily.Default,
+        color = TextPrimary,
+        lineHeight = 21.sp
+    )
+}
 
           // Footer action row (e.g. copy)
           Row(
