@@ -342,7 +342,7 @@ suspend fun generateImage(
             .toRequestBody(mediaType)
 
         val imageUrl =
-            "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image:generateContent"
+    "https://generativelanguage.googleapis.com/v1/models/gemini-3.1-flash-image:generateContent"
 
         val request = Request.Builder()
             .url("$imageUrl?key=$apiKey")
