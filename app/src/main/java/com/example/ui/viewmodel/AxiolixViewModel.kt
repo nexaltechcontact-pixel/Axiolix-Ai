@@ -125,7 +125,14 @@ class AxiolixViewModel(application: Application) : AndroidViewModel(application)
     val trimmed = prompt.trim()
     if (trimmed.isEmpty()) return
 
-    val convId = _uiState.value.currentConversationId ?: return
+    val convId = _uiState.value.currentConversationId
+
+if (convId == null) {
+    _uiState.value = _uiState.value.copy(
+        errorMessage = "IMAGE ERROR: No active chat session."
+    )
+    return
+}
 
     viewModelScope.launch {
       _uiState.value = _uiState.value.copy(isGenerating = true, errorMessage = null)
