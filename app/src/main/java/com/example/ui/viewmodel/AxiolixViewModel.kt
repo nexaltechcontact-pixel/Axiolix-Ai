@@ -192,12 +192,12 @@ fun analyzeImage(imageUri: Uri) {
 
         result.onFailure { error ->
           _uiState.value = _uiState.value.copy(
-            errorMessage = "Image generation failed: ${error.localizedMessage}"
+            errorMessage = "IMAGE ERROR: ${error.message ?: error.javaClass.simpleName}"
           )
         }
       } catch (e: Exception) {
         _uiState.value = _uiState.value.copy(
-          errorMessage = "Image generation failed: ${e.localizedMessage}"
+          errorMessage = "IMAGE EXCEPTION: ${e.message ?: e.javaClass.simpleName}"
         )
       } finally {
         _uiState.value = _uiState.value.copy(
