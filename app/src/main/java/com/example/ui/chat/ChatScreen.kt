@@ -377,7 +377,7 @@ fun ChatScreen(
         }
       }
     }
-    // Bottom Input Bar
+// Bottom Input Bar
 ChatInputBar(
     isGenerating = isGenerating,
     onSendMessage = onSendMessage,
@@ -388,4 +388,4 @@ ChatInputBar(
         // Image generator logic yahan connect karenge
     }
 )
-    
+}
