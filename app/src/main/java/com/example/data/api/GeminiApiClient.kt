@@ -301,13 +301,16 @@ suspend fun generateImage(
         val jsonBody = JSONObject()
 
         val contentsArray = JSONArray()
+
         val contentObject = JSONObject()
+        contentObject.put("role", "user")
+
         val partsArray = JSONArray()
 
         partsArray.put(
             JSONObject().put(
                 "text",
-                "Generate a high-quality image based on this prompt: $prompt"
+                prompt
             )
         )
 
@@ -317,6 +320,7 @@ suspend fun generateImage(
         jsonBody.put("contents", contentsArray)
 
         val generationConfig = JSONObject()
+
         val responseModalities = JSONArray()
         responseModalities.put("IMAGE")
 
@@ -338,10 +342,11 @@ suspend fun generateImage(
             .toRequestBody(mediaType)
 
         val imageUrl =
-            "https://generativelanguage.googleapis.com/v1/models/gemini-3.1-flash-image:generateContent"
+            "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image:generateContent"
 
         val request = Request.Builder()
             .url("$imageUrl?key=$apiKey")
+            .addHeader("Content-Type", "application/json")
             .post(requestBody)
             .build()
 
@@ -352,13 +357,16 @@ suspend fun generateImage(
         val responseBody = response.body?.string()
 
         if (!response.isSuccessful || responseBody.isNullOrEmpty()) {
-            Log.w(
+
+            Log.e(
                 TAG,
                 "Image generation failed: ${response.code} $responseBody"
             )
 
             return@withContext Result.failure(
-                Exception("Gemini image generation failed: ${response.code}")
+                Exception(
+                    "Gemini image generation failed: HTTP ${response.code}"
+                )
             )
         }
 
@@ -367,47 +375,53 @@ suspend fun generateImage(
         val candidates =
             jsonResponse.optJSONArray("candidates")
 
-        if (candidates != null && candidates.length() > 0) {
+        if (candidates == null || candidates.length() == 0) {
+            return@withContext Result.failure(
+                Exception("No image candidate returned by Gemini.")
+            )
+        }
 
-            val content =
-                candidates
-                    .getJSONObject(0)
-                    .optJSONObject("content")
+        val content =
+            candidates
+                .getJSONObject(0)
+                .optJSONObject("content")
 
-            val parts =
-                content?.optJSONArray("parts")
+        val parts =
+            content?.optJSONArray("parts")
 
-            if (parts != null) {
+        if (parts == null || parts.length() == 0) {
+            return@withContext Result.failure(
+                Exception("No image data returned by Gemini.")
+            )
+        }
 
-                for (i in 0 until parts.length()) {
+        for (i in 0 until parts.length()) {
 
-                    val part = parts.getJSONObject(i)
+            val part = parts.getJSONObject(i)
 
-                    val inlineData =
-                        part.optJSONObject("inlineData")
-                            ?: part.optJSONObject("inline_data")
+            val inlineData =
+                part.optJSONObject("inlineData")
+                    ?: part.optJSONObject("inline_data")
 
-                    if (inlineData != null) {
+            if (inlineData != null) {
 
-                        val base64Data =
-                            inlineData.optString("data")
+                val base64Data =
+                    inlineData.optString("data")
 
-                        if (base64Data.isNotEmpty()) {
+                if (base64Data.isNotEmpty()) {
 
-                            return@withContext Result.success(
-                                Base64.decode(
-                                    base64Data,
-                                    Base64.DEFAULT
-                                )
-                            )
-                        }
-                    }
+                    return@withContext Result.success(
+                        Base64.decode(
+                            base64Data,
+                            Base64.DEFAULT
+                        )
+                    )
                 }
             }
         }
 
         Result.failure(
-            Exception("No generated image returned by Gemini.")
+            Exception("Gemini returned no image data.")
         )
 
     } catch (e: Exception) {
@@ -421,6 +435,7 @@ suspend fun generateImage(
         Result.failure(e)
     }
 }
+
   private fun generateCyberFallback(prompt: String): String {
 
     val lower = prompt.lowercase()
