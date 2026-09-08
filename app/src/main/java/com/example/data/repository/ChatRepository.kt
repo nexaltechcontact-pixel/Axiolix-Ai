@@ -279,6 +279,21 @@ class ChatRepository(
       botMsg.copy(id = botMsgId)
     )
   }
+    suspend fun insertSpecialMessage(
+    message: ChatMessageEntity
+) {
+    chatDao.insertMessage(message)
+
+    val conv = chatDao.getConversationById(message.conversationId)
+
+    if (conv != null) {
+        chatDao.updateConversation(
+            conv.copy(
+                updatedAt = System.currentTimeMillis()
+            )
+        )
+    }
+}
   suspend fun getLastMessage(
     conversationId: Long
   ): ChatMessageEntity? {
