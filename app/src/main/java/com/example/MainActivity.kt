@@ -135,7 +135,9 @@ fun AxiolixApp(viewModel: AxiolixViewModel) {
               onImageSelected = { uri ->
                 viewModel.analyzeImage(uri)
               },
-
+              onGenerateImage = { prompt ->
+    // Image Generator logic yahan connect karenge
+},
               onOpenDashboard = {
                 viewModel.openDashboard()
               },
