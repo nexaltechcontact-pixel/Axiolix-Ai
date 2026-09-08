@@ -51,7 +51,8 @@ fun ChatInputBar(
   isGenerating: Boolean,
   onSendMessage: (String) -> Unit,
   onPickImage: () -> Unit,
-  modifier: Modifier = Modifier
+onGenerateImage: (String) -> Unit,
+modifier: Modifier = Modifier
 ) {
   var text by remember { mutableStateOf("") }
 
@@ -88,7 +89,25 @@ fun ChatInputBar(
         modifier = Modifier.size(22.dp)
       )
     }
-
+// Generate Image Button
+IconButton(
+    onClick = {
+        val clean = text.trim()
+        if (clean.isNotEmpty() && !isGenerating) {
+            onGenerateImage(clean)
+            text = ""
+        }
+    },
+    enabled = text.isNotBlank() && !isGenerating,
+    modifier = Modifier
+        .size(42.dp)
+        .testTag("generate_image_button")
+) {
+    Text(
+        text = "🎨",
+        fontSize = 20.sp
+    )
+}
     OutlinedTextField(
       value = text,
       onValueChange = { text = it },
