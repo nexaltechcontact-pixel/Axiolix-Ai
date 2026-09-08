@@ -185,9 +185,10 @@ fun analyzeImage(imageUri: Uri) {
 
       try {
         val result = chatRepository.generateImage(
-          conversationId = convId,
-          prompt = trimmed
-        )
+  conversationId = convId,
+  context = getApplication<Application>(),
+  prompt = trimmed
+)
 
         result.onFailure { error ->
           _uiState.value = _uiState.value.copy(
