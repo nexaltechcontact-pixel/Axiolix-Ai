@@ -171,6 +171,40 @@ fun analyzeImage(imageUri: Uri) {
         }
     }
 }
+  fun generateImage(prompt: String) {
+    val trimmed = prompt.trim()
+    if (trimmed.isEmpty()) return
+
+    val convId = _uiState.value.currentConversationId ?: return
+
+    viewModelScope.launch {
+      _uiState.value = _uiState.value.copy(
+        isGenerating = true,
+        errorMessage = null
+      )
+
+      try {
+        val result = chatRepository.generateImage(
+          conversationId = convId,
+          prompt = trimmed
+        )
+
+        result.onFailure { error ->
+          _uiState.value = _uiState.value.copy(
+            errorMessage = "Image generation failed: ${error.localizedMessage}"
+          )
+        }
+      } catch (e: Exception) {
+        _uiState.value = _uiState.value.copy(
+          errorMessage = "Image generation failed: ${e.localizedMessage}"
+        )
+      } finally {
+        _uiState.value = _uiState.value.copy(
+          isGenerating = false
+        )
+      }
+    }
+  }
   fun renameConversation(id: Long, newTitle: String) {
     viewModelScope.launch {
       val clean = newTitle.trim()
