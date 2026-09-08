@@ -377,14 +377,15 @@ fun ChatScreen(
         }
       }
     }
-
     // Bottom Input Bar
-    ChatInputBar(
+ChatInputBar(
     isGenerating = isGenerating,
     onSendMessage = onSendMessage,
     onPickImage = {
         imagePickerLauncher.launch("image/*")
+    },
+    onGenerateImage = { prompt ->
+        // Image generator logic yahan connect karenge
     }
 )
-  }
-}
+    
