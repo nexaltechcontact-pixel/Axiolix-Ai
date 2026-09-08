@@ -125,27 +125,71 @@ class AxiolixViewModel(application: Application) : AndroidViewModel(application)
     val trimmed = prompt.trim()
     if (trimmed.isEmpty()) return
 
-    val convId = _uiState.value.currentConversationId
-
-if (convId == null) {
-    _uiState.value = _uiState.value.copy(
-        errorMessage = "IMAGE ERROR: No active chat session."
-    )
-    return
-}
+    val convId = _uiState.value.currentConversationId ?: return
 
     viewModelScope.launch {
-      _uiState.value = _uiState.value.copy(isGenerating = true, errorMessage = null)
-      try {
-        chatRepository.sendMessage(convId, trimmed)
-      } catch (e: Exception) {
-        _uiState.value = _uiState.value.copy(errorMessage = "Signal failure: ${e.localizedMessage}")
-      } finally {
-        _uiState.value = _uiState.value.copy(isGenerating = false)
-      }
+        _uiState.value = _uiState.value.copy(
+            isGenerating = true,
+            errorMessage = null
+        )
+
+        try {
+
+            // 💖 SPECIAL: Super Thanks To
+            if (trimmed.equals("Super Thanks To", ignoreCase = true)) {
+
+                val now = System.currentTimeMillis()
+
+                // User message
+                chatRepository.sendMessage(
+                    convId,
+                    trimmed
+                )
+
+                // Special Axiolix response
+                val thanksMessage = """
+My Fav Person — Nusrat 💕
+“I’m sorry for every little moment where I may have hurt you. You’re genuinely special to me, and I hope our bond always stays beautiful.”
+
+My Jigri Dost — Deepak 💓
+“A true friend is someone who stays through the chaos, the silence, and everything in between. Thanks for being that friend, bro!”
+
+The Best Person Of My Life — Soham Bhai 💗
+“Some people earn respect not by what they say, but by who they are. You’ll always have my deepest respect and a special place in my life.”
+
+Greatest Bro — Akshit 😍
+“Brothers aren’t always connected by blood—sometimes they’re connected by countless memories, crazy moments, and an unbreakable bond. Proud to call you my bro!”
+                """.trimIndent()
+
+                val botMsg = ChatMessageEntity(
+                    conversationId = convId,
+                    sender = "AXIOLIX",
+                    content = thanksMessage,
+                    timestamp = System.currentTimeMillis()
+                )
+
+                chatRepository.insertSpecialMessage(botMsg)
+
+            } else {
+
+                // 🤖 Normal Gemini message
+                chatRepository.sendMessage(
+                    convId,
+                    trimmed
+                )
+            }
+
+        } catch (e: Exception) {
+            _uiState.value = _uiState.value.copy(
+                errorMessage = "Signal failure: ${e.localizedMessage}"
+            )
+        } finally {
+            _uiState.value = _uiState.value.copy(
+                isGenerating = false
+            )
+        }
     }
-  } 
-  
+}
 fun analyzeImage(imageUri: Uri) {
     val convId = _uiState.value.currentConversationId ?: return
 
