@@ -205,16 +205,20 @@ class ChatRepository(
       botMsg.copy(id = botMsgId)
     )
   }
-  suspend fun generateImage(
+  
+    suspend fun generateImage(
     conversationId: Long,
+    context: Context,
     prompt: String
-  ): Result<ByteArray> {
+  ): Result<ChatMessageEntity> {
+
+    val now = System.currentTimeMillis()
 
     val userMsg = ChatMessageEntity(
       conversationId = conversationId,
       sender = "USER",
       content = "🎨 Image generation: $prompt",
-      timestamp = System.currentTimeMillis()
+      timestamp = now
     )
 
     chatDao.insertMessage(userMsg)
@@ -228,7 +232,43 @@ class ChatRepository(
       )
     }
 
-    return result
+    val imageBytes = result.getOrThrow()
+
+    val imageDir = java.io.File(context.filesDir, "generated_images")
+
+    if (!imageDir.exists()) {
+      imageDir.mkdirs()
+    }
+
+    val imageFile = java.io.File(
+      imageDir,
+      "generated_${System.currentTimeMillis()}.png"
+    )
+
+    imageFile.writeBytes(imageBytes)
+
+    val botMsg = ChatMessageEntity(
+      conversationId = conversationId,
+      sender = "AXIOLIX",
+      content = "🖼️IMAGE_FILE:${imageFile.absolutePath}",
+      timestamp = System.currentTimeMillis()
+    )
+
+    val botMsgId = chatDao.insertMessage(botMsg)
+
+    val conv = chatDao.getConversationById(conversationId)
+
+    if (conv != null) {
+      chatDao.updateConversation(
+        conv.copy(
+          updatedAt = System.currentTimeMillis()
+        )
+      )
+    }
+
+    return Result.success(
+      botMsg.copy(id = botMsgId)
+    )
   }
   suspend fun getLastMessage(
     conversationId: Long
