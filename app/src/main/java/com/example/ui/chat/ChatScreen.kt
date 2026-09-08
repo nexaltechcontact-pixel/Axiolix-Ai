@@ -83,6 +83,7 @@ fun ChatScreen(
   conversationTitle: String,
   onSendMessage: (String) -> Unit,
   onImageSelected: (Uri) -> Unit,
+  onGenerateImage: (String) -> Unit,
   onOpenDashboard: () -> Unit,
   onOpenAuthDialog: () -> Unit,
   onCreateNewSession: () -> Unit,
