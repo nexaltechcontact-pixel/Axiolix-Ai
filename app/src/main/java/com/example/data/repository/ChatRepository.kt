@@ -226,11 +226,20 @@ class ChatRepository(
     val result = geminiApiClient.generateImage(prompt)
 
     if (result.isFailure) {
-      return Result.failure(
-        result.exceptionOrNull()
-          ?: Exception("Image generation failed.")
-      )
-    }
+    val error = result.exceptionOrNull()
+        ?: Exception("Unknown image generation error.")
+
+    val errorMsg = ChatMessageEntity(
+        conversationId = conversationId,
+        sender = "AXIOLIX",
+        content = "⚠️ Image generation failed:\n${error.message ?: error}",
+        timestamp = System.currentTimeMillis()
+    )
+
+    chatDao.insertMessage(errorMsg)
+
+    return Result.failure(error)
+}
 
     val imageBytes = result.getOrThrow()
 
