@@ -226,6 +226,7 @@ fun ChatScreen(
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                MusicButton()
 
                 // New Chat
                 IconButton(
