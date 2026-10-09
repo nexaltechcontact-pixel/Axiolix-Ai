@@ -31,7 +31,7 @@ object OnlineMusic {
         if (player != null) return
         player = ExoPlayer.Builder(ctx.applicationContext).build().apply {
             addListener(object : Player.Listener {
-                override fun onIsPlayingChanged(playing: Boolean) { isPlaying = playing }
+                               override fun onIsPlayingChanged(playing: Boolean) { OnlineMusic.isPlaying = playing }  
             })
         }
     }
