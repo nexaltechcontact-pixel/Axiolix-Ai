@@ -171,6 +171,10 @@ fun AxiolixApp(viewModel: AxiolixViewModel) {
         }
     )
 }
+          }
+        }
+      }
+    }
 
     // Register / Login Pop Up Modal
     if (uiState.showAuthDialog) {
