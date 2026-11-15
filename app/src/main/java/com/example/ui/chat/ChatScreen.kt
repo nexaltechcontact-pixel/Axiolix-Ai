@@ -240,7 +240,7 @@ IconButton(
         imageVector = Icons.Default.Radar,
         contentDescription = "Network Scanner",
         tint = NeonCyan,
-        modifier = Modifier.size(22.dp)
+        modifier = modifier.size(20.dp)
     )
 }
 
@@ -258,15 +258,6 @@ IconButton(
         modifier = Modifier.size(22.dp)
     )
 }
-                {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = "New Session",
-                        tint = NeonCyan,
-                        modifier = Modifier.size(22.dp)
-                    )
-                }
-
                 // Dashboard
                 IconButton(
                     onClick = onOpenDashboard,
