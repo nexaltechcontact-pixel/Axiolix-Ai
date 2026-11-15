@@ -240,7 +240,7 @@ IconButton(
         imageVector = Icons.Default.Radar,
         contentDescription = "Network Scanner",
         tint = NeonCyan,
-        modifier = modifier.size(20.dp)
+        modifier = Modifier.size(20.dp)
     )
 }
 
