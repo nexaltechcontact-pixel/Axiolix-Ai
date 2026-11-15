@@ -44,6 +44,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.Security
+import androidx.compose.material.icons.filled.Radar
 
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -228,13 +229,35 @@ fun ChatScreen(
             ) {
                 MusicButton()
 
-                // New Chat
-                IconButton(
-                    onClick = onCreateNewSession,
-                    modifier = Modifier
-                        .size(40.dp)
-                        .testTag("new_chat_button")
-                ) {
+                
+// Network Scanner
+IconButton(
+    onClick = onOpenNetworkScanner,
+    modifier = Modifier.size(40.dp)
+) {
+    Icon(
+        imageVector = Icons.Default.Radar,
+        contentDescription = "Network Scanner",
+        tint = NeonCyan,
+        modifier = Modifier.size(22.dp)
+    )
+}
+
+// New Chat
+IconButton(
+    onClick = onCreateNewSession,
+    modifier = Modifier
+        .size(40.dp)
+        .testTag("new_chat_button")
+) {
+    Icon(
+        imageVector = Icons.Default.Add,
+        contentDescription = "New Session",
+        tint = NeonCyan,
+        modifier = Modifier.size(22.dp)
+    )
+}
+                {
                     Icon(
                         imageVector = Icons.Default.Add,
                         contentDescription = "New Session",
