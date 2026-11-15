@@ -1,6 +1,9 @@
 package com.example
 
 import android.os.Bundle
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import com.example.ui.NetworkScannerScreen
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -46,7 +49,9 @@ fun AxiolixApp(viewModel: AxiolixViewModel) {
   val uiState by viewModel.uiState.collectAsStateWithLifecycle()
   val conversations by viewModel.conversations.collectAsStateWithLifecycle()
   val currentMessages by viewModel.currentMessages.collectAsStateWithLifecycle()
-
+  val (showNetworkScanner, setShowNetworkScanner) =
+    remember { mutableStateOf(false) }
+    
   val activeConversationTitle = conversations
     .find { it.id == uiState.currentConversationId }
     ?.title
@@ -121,39 +126,51 @@ fun AxiolixApp(viewModel: AxiolixViewModel) {
             )
 
           } else {
+            if (showNetworkScanner) {
 
-            ChatScreen(
-              messages = currentMessages,
-              isGenerating = uiState.isGenerating,
-              currentUser = uiState.currentUser,
-              conversationTitle = activeConversationTitle,
-
-              onSendMessage = {
-                viewModel.sendMessage(it)
-              },
-
-              onImageSelected = { uri ->
-                viewModel.analyzeImage(uri)
-              },
-              onGenerateImage = { prompt ->
-    viewModel.generateImage(prompt)
-},
-              onOpenDashboard = {
-                viewModel.openDashboard()
-              },
-
-              onOpenAuthDialog = {
-                viewModel.showAuthDialog()
-              },
-
-              onCreateNewSession = {
-                viewModel.createNewSession()
-              }
-            )
-          }
+    NetworkScannerScreen(
+        onBack = {
+            setShowNetworkScanner(false)
         }
-      }
-    }
+    )
+
+} else {
+
+    ChatScreen(
+        messages = currentMessages,
+        isGenerating = uiState.isGenerating,
+        currentUser = uiState.currentUser,
+        conversationTitle = activeConversationTitle,
+
+        onSendMessage = {
+            viewModel.sendMessage(it)
+        },
+
+        onImageSelected = { uri ->
+            viewModel.analyzeImage(uri)
+        },
+
+        onGenerateImage = { prompt ->
+            viewModel.generateImage(prompt)
+        },
+
+        onOpenDashboard = {
+            viewModel.openDashboard()
+        },
+
+        onOpenAuthDialog = {
+            viewModel.showAuthDialog()
+        },
+
+        onCreateNewSession = {
+            viewModel.createNewSession()
+        },
+
+        onOpenNetworkScanner = {
+            setShowNetworkScanner(true)
+        }
+    )
+}
 
     // Register / Login Pop Up Modal
     if (uiState.showAuthDialog) {
