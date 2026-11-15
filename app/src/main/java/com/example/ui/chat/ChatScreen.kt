@@ -94,6 +94,7 @@ fun ChatScreen(
     onOpenDashboard: () -> Unit,
     onOpenAuthDialog: () -> Unit,
     onCreateNewSession: () -> Unit,
+    onOpenNetworkScanner: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val listState = rememberLazyListState()
